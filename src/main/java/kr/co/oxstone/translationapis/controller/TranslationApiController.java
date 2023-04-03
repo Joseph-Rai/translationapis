@@ -134,8 +134,7 @@ public class TranslationApiController {
 
     public Conversation getNewConversation() {
         return getChatGPT().newConversation(
-                "다음 문장에서 반복, 띄어쓰기를 정리한 문장 output 해줘\n"
-                        + "정리할 문장이 없으면 input 그대로 출력");
+                "다음 문장에서 반복, 띄어쓰기를 정리한 문장을 반환. 정리할게 없다면 input text만 그대로 반환.");
     }
 
     @ExceptionHandler(IOException.class)
