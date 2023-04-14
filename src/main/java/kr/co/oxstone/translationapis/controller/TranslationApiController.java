@@ -12,6 +12,7 @@ import io.github.kezhenxu94.chatgpt.ChatGPT;
 import io.github.kezhenxu94.chatgpt.Conversation;
 import io.github.kezhenxu94.chatgpt.message.AssistantMessage;
 import io.github.kezhenxu94.chatgpt.message.Message;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/v1/")
+@Slf4j
 public class TranslationApiController {
 
     private TranslationServiceClient client;
@@ -89,13 +91,14 @@ public class TranslationApiController {
     public ResponseEntity<byte[]> translateText(@RequestBody byte[] reqByteStream) throws IOException {
         TranslateTextRequest request = TranslateTextRequest.parseFrom(reqByteStream);
         TranslateTextResponse response = client.translateText(request);
-
         return ResponseEntity.ok(response.toByteArray());
     }
 
     @PostMapping("/chatGPT")
     public String correctByChatGPT(@RequestBody String text) throws IOException, InterruptedException {
-        return getNewConversation().ask(text).content();
+        String content = getNewConversation().ask(text).content();
+        log.info(content);
+        return content;
     }
 
     public ChatGPT getChatGPT() {
@@ -142,7 +145,7 @@ public class TranslationApiController {
         newConversation.messages().add(new AssistantMessage("정리할 문장이 없으면 어떻게 할까요?"));
         newConversation.messages().add(Message.ofUser("입력된 텍스트만 그대로 반환."));
         newConversation.messages().add(new AssistantMessage("어떤 문장을 정리할까요?"));
-        newConversation.messages().add(Message.ofUser("다음 문장을 위 조건대로 정리만 해서 반환해줘\n"));
+        newConversation.messages().add(Message.ofUser("다음 문장을 번역하지 말고 위 조건대로 정리만 해서 반환해줘\n"));
         return newConversation;
     }
 
