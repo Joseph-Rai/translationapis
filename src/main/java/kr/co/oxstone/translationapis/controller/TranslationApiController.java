@@ -10,6 +10,8 @@ import com.google.cloud.translate.v3.TranslationServiceSettings;
 import com.google.common.collect.Lists;
 import io.github.kezhenxu94.chatgpt.ChatGPT;
 import io.github.kezhenxu94.chatgpt.Conversation;
+import io.github.kezhenxu94.chatgpt.message.AssistantMessage;
+import io.github.kezhenxu94.chatgpt.message.Message;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -134,7 +136,14 @@ public class TranslationApiController {
 
     public Conversation getNewConversation() {
         String prompt = getSecret(projectID, "CHATGPT_PROMPT_FOR_TRANSLATION");
-        return getChatGPT().newConversation(prompt);
+        Conversation newConversation = getChatGPT().newConversation();
+        newConversation.messages().add(Message.ofSystem("저는 문장을 정리해주는 기능을 합니다. 문장을 어떻게 정리할까요?"));
+        newConversation.messages().add(Message.ofUser(prompt));
+        newConversation.messages().add(new AssistantMessage("정리할 문장이 없으면 어떻게 할까요?"));
+        newConversation.messages().add(Message.ofUser("입력된 텍스트만 그대로 반환."));
+        newConversation.messages().add(new AssistantMessage("어떤 문장을 정리할까요?"));
+        newConversation.messages().add(Message.ofUser("다음 문장을 위 조건대로 정리만 해서 반환해줘\n"));
+        return newConversation;
     }
 
     @ExceptionHandler(IOException.class)
