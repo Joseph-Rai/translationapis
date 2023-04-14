@@ -145,7 +145,7 @@ public class TranslationApiController {
         newConversation.messages().add(new AssistantMessage("정리할 문장이 없으면 어떻게 할까요?"));
         newConversation.messages().add(Message.ofUser("입력된 텍스트만 그대로 반환."));
         newConversation.messages().add(new AssistantMessage("어떤 문장을 정리할까요?"));
-        newConversation.messages().add(Message.ofUser("다음 문장을 번역하지 말고 위 조건대로 정리만 해서 반환해줘\n"));
+        newConversation.messages().add(Message.ofUser("다음 문장 혹은 단어를 번역하지 말고 위 조건대로 정리하고 그대로 반환해줘\\n"));
         return newConversation;
     }
 
