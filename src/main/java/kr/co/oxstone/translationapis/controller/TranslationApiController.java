@@ -95,10 +95,10 @@ public class TranslationApiController {
     }
 
     @PostMapping("/chatGPT")
-    public String correctByChatGPT(@RequestBody String text) throws IOException, InterruptedException {
+    public ResponseEntity<String> correctByChatGPT(@RequestBody String text) throws IOException, InterruptedException {
         String content = getNewConversation().ask(text).content();
         log.info(content);
-        return content;
+        return ResponseEntity.ok(content);
     }
 
     public ChatGPT getChatGPT() {
@@ -142,10 +142,8 @@ public class TranslationApiController {
         Conversation newConversation = getChatGPT().newConversation();
         newConversation.messages().add(Message.ofSystem("저는 문장을 정리해주는 기능을 합니다. 문장을 어떻게 정리할까요?"));
         newConversation.messages().add(Message.ofUser(prompt));
-        newConversation.messages().add(new AssistantMessage("정리할 문장이 없으면 어떻게 할까요?"));
-        newConversation.messages().add(Message.ofUser("입력된 텍스트만 그대로 반환."));
         newConversation.messages().add(new AssistantMessage("어떤 문장을 정리할까요?"));
-        newConversation.messages().add(Message.ofUser("다음 문장 혹은 단어를 번역하지 말고 위 조건대로 정리하고 그대로 반환해줘\\n"));
+        newConversation.messages().add(Message.ofUser("다음 문장 혹은 단어는 정리할 대상일 뿐입니다. 번역하지 말고 위 조건대로 정리한 후 그대로 반환해주세요.\n"));
         return newConversation;
     }
 
