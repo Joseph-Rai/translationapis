@@ -9,6 +9,7 @@ import com.google.cloud.translate.v3.TranslationServiceClient;
 import com.google.cloud.translate.v3.TranslationServiceSettings;
 import com.google.common.collect.Lists;
 import com.theokanning.openai.edit.EditRequest;
+import com.theokanning.openai.edit.EditResult;
 import com.theokanning.openai.service.OpenAiService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -112,7 +113,12 @@ public class TranslationApiController {
                 .instruction(prompt)
                 .input(inputText)
                 .build();
-        return service.createEdit(editRequest).getChoices().get(0).getText();
+        try {
+            EditResult createEdit = service.createEdit(editRequest);
+            return createEdit.getChoices().get(0).getText();
+        } catch (Exception e) {
+            return inputText;
+        }
     }
 
     public String getProjectIdFromJsonFile(String filePath) {
