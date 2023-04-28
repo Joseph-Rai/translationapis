@@ -4,6 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: oxstone7/translationapis:1.1.0
+    image: oxstone7/translationapis:1.1.1
     ports:
       - "8080:8080"
