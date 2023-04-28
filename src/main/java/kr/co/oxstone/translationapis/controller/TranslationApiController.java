@@ -8,10 +8,8 @@ import com.google.cloud.translate.v3.TranslateTextResponse;
 import com.google.cloud.translate.v3.TranslationServiceClient;
 import com.google.cloud.translate.v3.TranslationServiceSettings;
 import com.google.common.collect.Lists;
-import io.github.kezhenxu94.chatgpt.ChatGPT;
-import io.github.kezhenxu94.chatgpt.Conversation;
-import io.github.kezhenxu94.chatgpt.message.AssistantMessage;
-import io.github.kezhenxu94.chatgpt.message.Message;
+import com.theokanning.openai.edit.EditRequest;
+import com.theokanning.openai.service.OpenAiService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -31,6 +29,7 @@ import java.nio.file.Paths;
 @Slf4j
 public class TranslationApiController {
 
+    private final String MODEL = "text-davinci-edit-001";
     private TranslationServiceClient client;
     private SecretManagerServiceClient secretManagerServiceClient;
     private String projectID;
@@ -96,18 +95,24 @@ public class TranslationApiController {
 
     @PostMapping("/chatGPT")
     public ResponseEntity<String> correctByChatGPT(@RequestBody String text) throws IOException, InterruptedException {
-        String content = getNewConversation().ask(text).content();
-        log.info(content);
-        return ResponseEntity.ok(content);
+        String response = cleanUpTextByChatGPT(text);
+        log.info("Before: \t{}", text);
+        log.info("After: \t{}", response);
+        return ResponseEntity.ok(response);
     }
 
-    public ChatGPT getChatGPT() {
+    public String cleanUpTextByChatGPT(String inputText) {
         String chatGptApiKey = getSecret(projectID, "CHATGPT_API_KEY");
-        return ChatGPT
-                .builder()
-//                .dataPath(Files.createTempDirectory("chatgpt")) // Persist the chat history to a data path
-                .apiKey(chatGptApiKey)
+        String prompt = getSecret(projectID, "CHATGPT_PROMPT_FOR_TRANSLATION");
+
+        OpenAiService service = new OpenAiService(chatGptApiKey);
+        EditRequest editRequest = EditRequest.builder()
+                .model(MODEL)
+                .topP(0.2)
+                .instruction(prompt)
+                .input(inputText)
                 .build();
+        return service.createEdit(editRequest).getChoices().get(0).getText();
     }
 
     public String getProjectIdFromJsonFile(String filePath) {
@@ -135,16 +140,6 @@ public class TranslationApiController {
                 .build();
         AccessSecretVersionResponse response = secretManagerServiceClient.accessSecretVersion(request);
         return response.getPayload().getData().toStringUtf8();
-    }
-
-    public Conversation getNewConversation() {
-        String prompt = getSecret(projectID, "CHATGPT_PROMPT_FOR_TRANSLATION");
-        Conversation newConversation = getChatGPT().newConversation();
-        newConversation.messages().add(Message.ofSystem("저는 문장을 정리해주는 기능을 합니다. 문장을 어떻게 정리할까요?"));
-        newConversation.messages().add(Message.ofUser(prompt));
-        newConversation.messages().add(new AssistantMessage("어떤 문장을 정리할까요?"));
-        newConversation.messages().add(Message.ofUser("다음 문장 혹은 단어는 정리할 대상일 뿐입니다. 번역하지 말고 위 조건대로 정리한 후 그대로 반환해주세요.\n"));
-        return newConversation;
     }
 
     @ExceptionHandler(IOException.class)
