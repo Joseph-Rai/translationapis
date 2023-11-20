@@ -13,6 +13,7 @@ import com.theokanning.openai.edit.EditResult;
 import com.theokanning.openai.service.OpenAiService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -94,17 +95,19 @@ public class TranslationApiController {
     }
 
     @PostMapping("/chatGPT")
-    public ResponseEntity<String> correctByChatGPT(@RequestBody String text) throws IOException, InterruptedException {
-        String response = cleanUpTextByChatGPT(text);
+    public ResponseEntity<String> translateByChatGPT(@RequestBody String text, @RequestHeader HttpHeaders reqHeader) throws IOException, InterruptedException {
+        String targetLanguageName = reqHeader.getFirst("target-language");
+        String response = requestTranslateToChatGPT(text, targetLanguageName);
         log.info("Before: \t{}", text);
         log.info("After: \t{}", response);
         return ResponseEntity.ok(response);
     }
 
-    public String cleanUpTextByChatGPT(String inputText) {
+    public String requestTranslateToChatGPT(String inputText, String targetLanguageName) {
         String model = getSecret(projectID, "CHATGPT_MODEL");
         String chatGptApiKey = getSecret(projectID, "CHATGPT_API_KEY");
         String prompt = getSecret(projectID, "CHATGPT_PROMPT_FOR_TRANSLATION");
+        prompt = String.format(prompt, targetLanguageName);
 
         OpenAiService service = new OpenAiService(chatGptApiKey);
         EditRequest editRequest = EditRequest.builder()
