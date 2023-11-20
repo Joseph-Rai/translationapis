@@ -30,7 +30,6 @@ import java.nio.file.Paths;
 @Slf4j
 public class TranslationApiController {
 
-    private final String MODEL = "text-davinci-edit-001";
     private TranslationServiceClient client;
     private SecretManagerServiceClient secretManagerServiceClient;
     private String projectID;
@@ -103,12 +102,13 @@ public class TranslationApiController {
     }
 
     public String cleanUpTextByChatGPT(String inputText) {
+        String model = getSecret(projectID, "CHATGPT_MODEL");
         String chatGptApiKey = getSecret(projectID, "CHATGPT_API_KEY");
         String prompt = getSecret(projectID, "CHATGPT_PROMPT_FOR_TRANSLATION");
 
         OpenAiService service = new OpenAiService(chatGptApiKey);
         EditRequest editRequest = EditRequest.builder()
-                .model(MODEL)
+                .model(model)
                 .topP(0.2)
                 .instruction(prompt)
                 .input(inputText)
