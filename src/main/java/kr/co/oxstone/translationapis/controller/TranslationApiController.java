@@ -8,6 +8,11 @@ import com.google.cloud.translate.v3.TranslateTextResponse;
 import com.google.cloud.translate.v3.TranslationServiceClient;
 import com.google.cloud.translate.v3.TranslationServiceSettings;
 import com.google.common.collect.Lists;
+import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.completion.CompletionResult;
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
+import com.theokanning.openai.completion.chat.ChatCompletionResult;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.edit.EditRequest;
 import com.theokanning.openai.edit.EditResult;
 import com.theokanning.openai.service.OpenAiService;
@@ -25,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/")
@@ -110,15 +116,23 @@ public class TranslationApiController {
         prompt = String.format(prompt, targetLanguageName);
 
         OpenAiService service = new OpenAiService(chatGptApiKey);
-        EditRequest editRequest = EditRequest.builder()
+//        EditRequest editRequest = EditRequest.builder()
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model(model)
                 .topP(0.2)
-                .instruction(prompt)
-                .input(inputText)
+                .messages(
+                        List.of(
+                                new ChatMessage("system", prompt),
+                                new ChatMessage("user", inputText))
+                )
+//                .instruction(prompt)
+//                .input(inputText)
                 .build();
         try {
-            EditResult createEdit = service.createEdit(editRequest);
-            return createEdit.getChoices().get(0).getText();
+//            EditResult createEdit = service.createEdit(editRequest);
+//            return createEdit.getChoices().get(0).getText();
+            ChatCompletionResult completionResult = service.createChatCompletion(chatCompletionRequest);
+            return completionResult.getChoices().get(0).getMessage().getContent();
         } catch (Exception e) {
             return inputText;
         }
